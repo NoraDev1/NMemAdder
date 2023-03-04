@@ -1,0 +1,333 @@
+import asyncio
+import logging
+from pyrogram import Client
+from pyrogram.types import Message
+from pyrogram.errors import FloodWait as FloodWait1
+from pyrogram import Client as Client1, filters
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+import time
+import datetime
+import tracemalloc
+import config
+from tools.database import Database
+from tools.main import bot
+LOGS = logging.getLogger(__name__)
+db = Database(config.DB_URL, config.DB_NAME)
+
+tracemalloc.start()
+
+
+TOKEN = config.BOT_TOKEN
+api = config.API_ID
+hash = config.API_HASH
+token = config.BOT_TOKEN
+
+
+
+
+@Client.on_message(filters.private & filters.command("memadd"))
+async def NewChat(client,message):
+    # if message.from_user.id not in config.AUTH_USERS:
+    #     # await message.delete()
+    #     return
+    nr = await message.reply_text("checking.....")
+    userr = message.from_user.id
+    if not await db.get_session(userr, 'session'):
+        return await nr.edit_text("please /login to use this feature.")
+    
+    if len(message.command) !=3 and ":" not in message.text:
+        return await nr.edit_text("please use in proper format.\n\n/memadd your grp username:other grp username count\n\n`/memadd @srcgrp:@destgrp 10`\n\n This will add 10 members from `@srcgrp` to `@destgrp`")
+    if ":" not in message.text:
+        return await nr.edit_text("please use in proper format.\n\n/memadd your grp username:other grp username count\n\n`/memadd @srcgrp:@destgrp 10`\n\n This will add 10 members from `@srcgrp` to `@destgrp`")
+    
+    if ':' in message.text and len(message.command) ==3:
+        # await nr.edit_text("checking your input....")
+
+        # cc = 0
+
+        try:
+            userid = message.from_user.id
+            chatraw_ = (message.command[1])
+            # src,dest = chatraw_.split(':')
+            count = int(message.command[2])
+            await nr.edit_text(f"Which type of users you want to scrape.\n\n👤 Active 👤 - Only Active Users.\n\n👥 Mixed 👥 - Active And Inactive Both Users",
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    f"👤 Active 👤",
+                                    callback_data=f"acti-{chatraw_}-{count}",
+                                )
+                            ],
+                            [InlineKeyboardButton(
+                                f"👥 Mixed 👥",
+                                callback_data=f"mixed-{chatraw_}-{count}",
+                                )
+                            ],
+                            [InlineKeyboardButton("close", callback_data="close")],
+                        ]
+                    ),)
+        except Exception as e:
+            return await nr.edit_text(f'Error : \n{e}')
+
+                       
+@Client.on_callback_query(filters.regex(r"active"))
+async def add_active(client, update):
+    userid = update.from_user.id
+    
+    if update.data.startswith("acti"):
+        gg,chatraw_,count = update.data.split("-")
+        src,dest = chatraw_.split(":")
+        try:
+            count = int(count)
+            cc = 0
+            await update.message.edit_text("STARTING CLIENT")
+            session = await db.get_session(userid, 'session')
+            # print(session)
+            # session = str(session)
+            
+            app = Client(session_name= session, api_id = api, api_hash = hash) 
+            await app.start()
+
+            # print('\n\napp started...')
+            await asyncio.sleep(0.5)
+            
+            # source chat
+
+            chat = await app.get_chat(src)
+            schat_id = chat.id
+            await app.join_chat(schat_id)
+            # dest chat
+            xx = await app.get_chat(dest)
+            tt = xx.members_count
+            dchat_id = xx.id
+            await app.join_chat(dchat_id)
+            start_time = time.time()
+
+        except Exception as e:
+            # await app.stop()
+            return await update.message.edit_text(f'Error : \n{e}')
+
+        try:          
+            async for member in app.iter_chat_members(schat_id):
+                    user = member.user
+                    s = ["online" , "recently"]
+                    if user.status in s:
+                        try:
+                            
+                            user_id = user.id 
+                            # print((f'TRYING TO ADD: `{user_id}`'))
+                            await update.message.edit_text(f'TRYING TO ADD: `{user_id}`')
+                            
+                            # add = 
+                            if await app.add_chat_members(dchat_id,user_id):
+                                cc = cc+1
+                                await update.message.edit_text(f'ADDED: `{user_id}`')
+                                # print(f'ADDED: `{user_id}`')
+                                await asyncio.sleep(5)
+                        except FloodWait1 as fl:
+                            t = "FLOODWAIT DETECTED IN USER ACCOUNT\n\nSTOPPED ADDING PROCESS"
+                            # logging.info(t)
+                            # print(t)
+                            await update.message.edit_text(t)
+                            x2 = await app.get_chat(dchat_id)
+                            t2 = x2.members_count
+                            completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
+                            ttext = f"""
+<u>**✨ Stopped adding process due to Floodwait of {fl.x}s ✨**</u>
+
+    ┏━━━━━━━━━━━━━━━━━┓
+    ┣✨ Added to chat Id: `{dchat_id}`
+    ┣✨ Previous chat member count : **{tt}**
+    ┣✨ Current chat member count : **{t2}**
+    ┣✨ Total users added : **{cc}**
+    ┣✨ Total time taken : **{completed_in}**s
+    ┗━━━━━━━━━━━━━━━━━┛
+                        """
+                            await update.message.delete()
+                            
+                            # logging.info(ttext)
+                            # print(ttext)
+                            await app.leave_chat(src)
+                            await app.stop()
+                            # raise StopAsyncIteration
+                            return await bot.send_message(update.chat.id, ttext)
+                        except Exception as e:
+                            e = str(e)
+                            await update.message.edit_text(f'FAILED TO ADD \n\nError : \n{e}')
+                            if "400 PEER_FLOOD" in e:
+                                await app.stop()
+                                return await update.message.edit_text("Adding stopped due to 400 PEER_FLOOD\n\nyour account is limited please wait sometimes then try again.")
+                            if "401 AUTH_KEY_UNREGISTERED" in e:
+                                await app.stop()
+                                return await update.message.edit_text("please login again to use this feature") 
+                            if "403 CHAT_WRITE_FORBIDDEN" in e:
+                                await app.stop()
+                                return await update.message.edit_text("You don't have rights to send messages in this chat\nPlease make user account admin and try again")
+                            if "400 CHANNEL_INVALID" in e:
+                                await app.stop()
+                                return await update.message.edit_text("The source or destination username is invalid")
+                            if "400 USERNAME_NOT_OCCUPIED" in e:
+                                await app.stop()
+                                return await update.message.edit_text("The username is not occupied by anyone")
+                            await asyncio.sleep(5)
+                            
+                        # stp = message.text
+                        # if await is_adding_cancel(message,stp):
+                        #     return
+                        if cc == count:
+                            x2 = await app.get_chat(dchat_id)
+                            t2 = x2.members_count
+                            completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
+                            ttext = f"""
+<u>**✨ Successfully completed adding process ✨**</u>
+
+    ┏━━━━━━━━━━━━━━━━━┓
+    ┣✨ Added to chat Id: `{dchat_id}`
+    ┣✨ Previous chat member count : **{tt}**
+    ┣✨ Current chat member count : **{t2}**
+    ┣✨ Total users added : **{cc}**
+    ┣✨ Total time taken : **{completed_in}**s
+    ┗━━━━━━━━━━━━━━━━━┛
+                        """
+                            await update.message.delete()
+                            # await client.send_message(message.chat.id, ttext)
+                            # logging.info(ttext)
+                            # print(ttext)
+                            await app.leave_chat(src)
+                            await app.stop()
+                            # raise StopAsyncIteration
+                            return await bot.send_message(update.chat.id, ttext)
+            
+        except Exception as e: 
+            return await update.message.edit_text(f'Error : \n{e}')
+            
+@Client.on_callback_query(filters.regex("^mixed"))
+async def add_active(client, update):
+    userid = update.from_user.id
+    if update.data.startswith("mixed"):
+        gg,chatraw_,count = update.data.split("-")
+        src,dest = chatraw_.split(":")
+        # print(f"{src}\n{dest}\n{count}")
+        try:     
+            count = int(count)
+            cc = 0
+            await update.message.edit_text("STARTING CLIENT")
+            session = await db.get_session(userid, 'session')
+            # print(session)
+            # session = str(session)
+            
+            app = Client(session_name= session, api_id = api, api_hash = hash) 
+            await app.start()
+
+            # print('\n\napp started...')
+            await asyncio.sleep(0.5)
+            
+            # source chat
+
+            chat = await app.get_chat(src)
+            schat_id = chat.id
+            await app.join_chat(schat_id)
+            # dest chat
+            xx = await app.get_chat(dest)
+            tt = xx.members_count
+            dchat_id = xx.id
+            await app.join_chat(dchat_id)
+            start_time = time.time()
+
+        except Exception as e:
+
+            return await update.message.edit_text(f'Error : \n{e}')
+        try:          
+            async for member in app.iter_chat_members(schat_id):
+                user = member.user
+                    # s = ["online" , "recently"]
+                    # if user.status in s:
+                try:
+                            
+                    user_id = user.id 
+                            # print((f'TRYING TO ADD: `{user_id}`'))
+                    await update.message.edit_text(f'TRYING TO ADD: `{user_id}`')
+                            
+                            # add = await app.add_chat_members(dchat_id,user_id)
+                    if await app.add_chat_members(dchat_id,user_id):
+                        cc = cc+1
+                        await update.message.edit_text(f'ADDED: `{user_id}`')
+                                # print(f'ADDED: `{user_id}`')
+                        await asyncio.sleep(5)
+                except FloodWait1 as fl:
+                        t = "FLOODWAIT DETECTED IN USER ACCOUNT\n\nSTOPPED ADDING PROCESS"
+                            # logging.info(t)
+                            # print(t)
+                        await update.message.edit_text(t)
+                        x2 = await app.get_chat(dchat_id)
+                        t2 = x2.members_count
+                        completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
+                        ttext = f"""
+<u>**✨ Stopped adding process due to Floodwait of {fl.x}s ✨**</u>
+
+    ┏━━━━━━━━━━━━━━━━━┓
+    ┣✨ Added to chat Id: `{dchat_id}`
+    ┣✨ Previous chat member count : **{tt}**
+    ┣✨ Current chat member count : **{t2}**
+    ┣✨ Total users added : **{cc}**
+    ┣✨ Total time taken : **{completed_in}**s
+    ┗━━━━━━━━━━━━━━━━━┛
+                        """
+                        # await update.message.delete()
+                            
+                            # logging.info(ttext)
+                            # print(ttext)
+                        await app.leave_chat(src)
+                        await app.stop()
+                            # raise StopAsyncIteration
+                        return await update.message.edit_text(ttext)
+                except Exception as e:
+                            e = str(e)
+                            await update.message.edit_text(f'FAILED TO ADD \n\nError : \n{e}')
+                            if "400 PEER_FLOOD" in e:
+                                await app.stop()
+                                return await update.message.edit_text("Adding stopped due to 400 PEER_FLOOD\n\nyour account is limited please wait sometimes then try again.")
+                            if "401 AUTH_KEY_UNREGISTERED" in e:
+                                await app.stop()
+                                return await update.message.edit_text("please login again to use this feature") 
+                            if "403 CHAT_WRITE_FORBIDDEN" in e:
+                                await app.stop()
+                                return await update.message.edit_text("You don't have rights to send messages in this chat\nPlease make user account admin and try again")
+                            if "400 CHANNEL_INVALID" in e:
+                                await app.stop()
+                                return await update.message.edit_text("The source or destination username is invalid")
+                            if "400 USERNAME_NOT_OCCUPIED" in e:
+                                await app.stop()
+                                return await update.message.edit_text("The username is not occupied by anyone")
+                            await asyncio.sleep(5)
+                            
+                        # stp = message.text
+                        # if await is_adding_cancel(message,stp):
+                        #     return
+                if cc == count:
+                    x2 = await app.get_chat(dchat_id)
+                    t2 = x2.members_count
+                    completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
+                    ttext = f"""
+<u>**✨ Successfully completed adding process ✨**</u>
+
+    ┏━━━━━━━━━━━━━━━━━┓
+    ┣✨ Added to chat Id: `{dchat_id}`
+    ┣✨ Previous chat member count : **{tt}**
+    ┣✨ Current chat member count : **{t2}**
+    ┣✨ Total users added : **{cc}**
+    ┣✨ Total time taken : **{completed_in}**s
+    ┗━━━━━━━━━━━━━━━━━┛
+                        """
+                    # await update.message.delete()
+                            # await client.send_message(message.chat.id, ttext)
+                            # logging.info(ttext)
+                            # print(ttext)
+                    await app.leave_chat(src)
+                    await app.stop()
+                            # raise StopAsyncIteration
+                    return await update.message.edit_text(ttext)
+            
+        except Exception as e: 
+            return await update.message.edit_text(f'Error : \n{e}')

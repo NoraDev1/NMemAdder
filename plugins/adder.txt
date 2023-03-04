@@ -1,0 +1,107 @@
+import asyncio
+from pyrogram import Client,filters
+from pyrogram.types import Message
+from pyrogram.errors import FloodWait
+
+from plugins.getme import botid
+
+# @Client.on_message(filters.private & filters.command(["inviteall", "kidnapall", 'memadd'],cmd))
+# async def bot__inviteall(client: Client, message: Message):
+#     nr = await message.reply_text('checking....')
+#     # if message.from_user.id not in config.AUTH_USERS:
+#     #     # await message.delete()
+#     #     return
+#     # nr = await message.reply_text("checking.....")
+#     # user = message.from_user
+#     # bid = await botid()
+#     # cc = 0
+#     # if len(message.command) == 1:
+#     #     return await nr.edit_text(
+#     #         f"Use this command to ban all members.\n\nUsage:\n\n`/banall chat_id count`\n\nEg: `/banall 1234567 100`\n This will ban 100 members of your chat with id `1234567`.",
+#     #         )
+#     # elif len(message.command) == 2:
+#     #     return await nr.edit_text(
+#     #         f"Use this command to ban all members.\n\nUsage:\n\n`/banall chat_id`\n\nEg: `/banall 1234567`\n This will ban all members of your chat with id `1234567`.",
+#     #         )
+#     # if len(message.command) !=3:
+#     #     return await nr.edit_text(
+#     #         f"Use this command to ban all members.\n\nUsage:\n\n`/banall chat_id`\n\nEg: `/banall 1234567`\n This will ban all members of your chat with id `1234567`.",
+#     #         )
+#     l = message.command
+#     if len(l) == 1:
+#         if not ':' in message.text:
+#             await nr.edit_text("please use in proper format.\n\n/memadd your grp username:other grp username here\n`/memadd @srcgrp:@destgrp`")
+        
+#     elif len(l) == 2:
+#         if not ':' in message.text:
+#             await nr.edit_text("please use in proper format.\n\n/memadd your grp username:other grp username here\n`/memadd @srcgrp:@destgrp`")
+#         elif ':' in message.text:
+#             await nr.edit_text("checking your input....")
+#             x,input = message.text.split(" ")
+#             src,dest = input.split(':')
+#         try:
+#             await app.join_chat(dest)
+#             await nr.edit_text('JOINED IN DESTINATION GROUP....')
+#             await app.join_chat(src)
+#             await nr.edit_text('JOINED IN SOURCE GROUP....')
+#             chat = await app.get_chat(src)
+#             await nr.edit_text(f"Analysing Active Members")
+#             await app.leave_chat(src)
+#             await nr.edit_text('LEFT FROM SOURCE GROUP....')
+#         except Exception as e:
+#             e = str(e)
+#             return await nr.edit_text('Failed to join group....\n\nError : ' + e)
+
+
+#         async for member in app.iter_chat_members(chat.id):
+#             user = member.user
+#             stat = ["online" , "recently"]
+#             if user.status in stat:
+#                 try:
+#                     await app.add_chat_members(dest, user.id)
+#                     await nr.edit_text(f'TRYING TO ADD: `{user.id}`')
+#                     await asyncio.sleep(5)
+
+#                 except FloodWait as fl:
+#                     print("FLOODWAIT DETECTED IN USER ACCOUNT\n\nSTOPPING ADDING MODULE")
+#                     return await nr.edit_text("FLOODWAIT DETECTED IN USER ACCOUNT\n\nSTOPPING ADDING MODULE")
+#                 except Exception as e:
+#                     e = str(e)
+#                     await nr.edit_text(f'FAILED TO ADD `{user.id}`\n\nERROR: {e}')
+#                     await asyncio.sleep(5)
+
+
+
+
+# @Client.on_message(filters.private & filters.command(["chk"],cmd))
+# async def chk_session(client: Client, message: Message):
+    
+#     nr = await message.reply_text("checking.......")
+#     xx = await app.get_me()
+  
+#     op = xx.first_name
+#     ox = xx.username
+#     id = xx.id
+#     await nr.edit_text(f'YOUR LOGGEDIN ACCOUNT USER DETAILS\n\nName: {op}\n\nUser Id: {id}\n\nUsername: @{ox}')
+
+# @Client.on_message(filters.private & filters.command(['login'],cmd))
+# async def connect(client, message):
+#     user_id = message.from_user.id
+#     session = await db.get_session(user_id, 'session')
+#     # await message.reply_chat_action("typing")
+#     if session:
+#         await message.reply_text(f'**Hoi Sur!**\n**You Are Currently Logged In With Your Session String**\n**Just Send Me Your New Session String To login**',reply_to_message_id = message.message_id,reply_markup=ForceReply(True),disable_web_page_preview=True)
+#     else:
+#         await message.reply_text(f'**Hoi Sur!**\n**You Are Not Logged In With Your Session String**\n**Just Send Me Your Session String To login**',reply_to_message_id = message.message_id,reply_markup=ForceReply(True),disable_web_page_preview=True)           
+
+# @Client.on_message(filters.private & filters.reply)
+# async def session_connect(bot,message):
+#     session = message.text
+#     user_id = message.from_user.id
+#     if (message.reply_to_message.reply_markup) and isinstance(message.reply_to_message.reply_markup, ForceReply):
+#         try:
+#             await db.set_session(user_id, session)
+#             await message.reply_text("✅ Your session Is Connected Successfully",reply_to_message_id = message.message_id)
+#         except Exception as f:
+#             print(f)
+#             return await message.reply_text(f"Error: {f}",reply_to_message_id = message.message_id)
