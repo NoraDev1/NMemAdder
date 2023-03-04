@@ -1,0 +1,12 @@
+pyrogram
+tgcrypto
+aiofiles
+motor
+dnspython
+
+psutil
+wget
+aiohttp
+requests
+pillow
+pyromod==1.5
