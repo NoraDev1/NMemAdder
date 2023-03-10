@@ -1,0 +1,15 @@
+2023-03-10 12:45:57,361 - __main__ - INFO - starting bot...
+2023-03-10 12:46:33,185 - __main__ - INFO - @NmemberAdder_bot started...
+2023-03-10 12:47:09,634 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:47:10,025 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:47:11,759 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:47:20,998 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:47:23,103 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:47:59,999 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:49:34,644 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:49:46,333 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:49:51,402 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:49:58,851 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:50:34,688 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:51:30,171 - pyrogram.parser.html - WARNING - Unclosed tags: <code> (x1)
+2023-03-10 12:57:04,643 - root - INFO - Stop signal received (SIGINT). Exiting...
