@@ -126,7 +126,7 @@ async def genStr(_, msg: Message):
         try:
             two_step_code = await bot.ask(
                 chat.id, 
-                "Your account have Two-Step Verification.\nPlease enter your Password.\n\nPress /cancel to Cancel.",
+                "حسابك يوجد فيه تحقق بخطوتين.\nارسل رمز تحقق بخطوتين او .\n\nاضغط /cancel للإلغاء.",
                 timeout=300
             )
         except TimeoutError:
