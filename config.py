@@ -23,4 +23,4 @@ DB_URL = os.environ.get("DB_URL", "mongodb+srv://dbnora:<password>@atlascluster.
 DB_NAME = os.environ.get("DB_NAME", "memadder")
 BROADCAST_AS_COPY = bool(os.environ.get("BROADCAST_AS_COPY", False))
 FORCE_SUBS = bool(os.environ.get("FORCE_SUBSCRIBE", False))
-PORT = os.environ.get("PORT", "8080")
+PORT = os.environ.get("PORT", "8000")
